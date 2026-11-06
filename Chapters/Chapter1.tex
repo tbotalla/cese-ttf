@@ -98,7 +98,7 @@ Los objetivos específicos fueron los siguientes:
 
 El alcance comprendió el diseño e implementación de un prototipo embarcado sobre la placa NUCLEO-F446RE, el firmware asociado y la aplicación móvil para el envío de telemetría por BLE. Se priorizó la adquisición multivariable, la persistencia local y la interfaz con el usuario móvil.
 
-En el firmware se incluyó el uso de un sistema operativo de tiempo real para organizar tareas concurrentes: muestreo de sensores, registro en tarjeta de memoria removible, y enlace BLE. Con ello se buscó separar las rutinas periódicas de las operaciones de entrada-salida de mayor latencia y mantener tiempos de respuesta acotados en el dispositivo.
+En el firmware se incluyó un sistema operativo de tiempo real para ejecutar de forma concurrente el muestreo de sensores, el registro en tarjeta de memoria removible y el enlace BLE. Esa organización buscó aislar las rutinas periódicas de las operaciones de entrada-salida de mayor latencia y mantener acotados los tiempos de respuesta del dispositivo.
 
 \begin{figure}[htbp]
 	\centering
