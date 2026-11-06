@@ -21,3 +21,11 @@ Thumbs.db
 # Editor
 *.swp
 *~
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/.gitignore
+/.idea/awsToolkit.xml
+/.idea/cese-ttf.iml
+/.idea/db-forest-config.xml
+/.idea/editor.xml
+/.idea/modules.xml
+/.idea/vcs.xml
