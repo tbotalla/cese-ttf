@@ -72,6 +72,8 @@ En el ámbito académico, las publicaciones abordan registradores de eventos, re
 \section{Objetivos del trabajo}
 \label{sec:objetivos}
 
+Esta sección presenta los objetivos del trabajo y el alcance del prototipo desarrollado. Primero se define el objetivo general, seguido de los objetivos específicos. Finalmente, se establece el alcance del proyecto, detallando qué aspectos fueron implementados y cuáles quedaron excluidos.
+
 \subsection{Objetivo general}
 \label{sec:objetivo-general}
 
@@ -83,7 +85,7 @@ El objetivo general del trabajo fue diseñar e implementar un sistema embebido d
 Los objetivos específicos fueron los siguientes:
 
 \begin{enumerate}
-	\item Seleccionar e integrar una plataforma de hardware basada en la familia de microcontroladores \code{STM32} y los módulos de sensado necesarios para posicionamiento global y medición inercial.
+	\item Seleccionar e integrar una plataforma de hardware basada en la familia de microcontroladores STM32 y los módulos de sensado necesarios para posicionamiento global y medición inercial.
 	\item Desarrollar el firmware que permita adquirir, sincronizar y registrar muestras de sensores con tasas adecuadas para el análisis de la conducción.
 	\item Implementar almacenamiento persistente en una tarjeta de memoria removible, con formatos de registro que permitan un análisis posterior.
 	\item Establecer comunicación BLE con la aplicación móvil para la transferencia de telemetría.
@@ -94,7 +96,7 @@ Los objetivos específicos fueron los siguientes:
 \subsection{Alcance}
 \label{sec:alcance}
 
-El alcance comprendió el diseño e implementación de un prototipo embarcado sobre placa \code{NUCLEO-F446RE}, el firmware asociado y la aplicación móvil para el envío de telemetría por BLE. Se priorizó la adquisición multivariable, la persistencia local y la interfaz con el usuario móvil.
+El alcance comprendió el diseño e implementación de un prototipo embarcado sobre la placa NUCLEO-F446RE, el firmware asociado y la aplicación móvil para el envío de telemetría por BLE. Se priorizó la adquisición multivariable, la persistencia local y la interfaz con el usuario móvil.
 
 En el firmware se incluyó el uso de un sistema operativo de tiempo real para organizar tareas concurrentes: muestreo de sensores, registro en tarjeta de memoria removible, y enlace BLE. Con ello se buscó separar las rutinas periódicas de las operaciones de entrada-salida de mayor latencia y mantener tiempos de respuesta acotados en el dispositivo.
 
