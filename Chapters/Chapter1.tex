@@ -53,21 +53,18 @@ En la tabla~\ref{tab:comercial-telemetria} se resume un conjunto de las alternat
 
 \begin{table}[htbp]
 	\centering
-	\caption{Alternativas comerciales representativas de telemetría para vehículos y motocicletas.}
-	\label{tab:comercial-telemetria}
-	\begin{tabular}{|p{2.2cm}|p{2.4cm}|p{4.2cm}|p{4.5cm}|}
-		\hline
-		\tabhead{Producto} & \tabhead{Fabricante} & \tabhead{Capacidades principales} & \tabhead{Limitaciones} \\
-		\hline
+	\caption[Telemetría comercial]{Alternativas comerciales representativas de telemetría para vehículos y motocicletas.}
+	\begin{tabular}{p{2.2cm}p{2.5cm}p{4.1cm}p{4.5cm}}
+		\toprule
+		\textbf{Producto} & \textbf{Fabricante} & \textbf{Capacidades principales} & \textbf{Limitaciones} \\
+		\midrule
 		EVO5 & AiM Technologies \citep{aim_evo5} & Canales configurables, posicionamiento global, bus CAN, y software Race Studio & Arquitectura cerrada. Costo elevado en configuraciones completas \\
-		\hline
 		MXL2 & AiM Technologies \citep{aim_mxl2} & Acelerómetro y giroscopio internos, posicionamiento global, entradas analógicas, y memoria interna & Mismo ecosistema propietario \\
-		\hline
 		C187 & MoTeC \citep{motec_c187} & Display a color, registro de datos, posicionamiento global, y software MoTeC i2 & Enfoque competición. Hardware y licencias de alto costo \\
-		\hline
 		Sticklogger V2/V3/V4 & 2D Datarecording \citep{data2d_moto} & Registro en memoria USB 3.0, señales CAN, analógicas, y digitales, y configuración vía USB & Plataforma cerrada. Enfoque competición y entornos exigentes \\
-		\hline
+		\bottomrule
 	\end{tabular}
+	\label{tab:comercial-telemetria}
 \end{table}
 
 En el ámbito académico, las publicaciones abordan registradores de eventos, reconstrucción de trayectorias, detección de colisiones, y plataformas embebidas de bajo costo. En Gelmini y col., se propuso un algoritmo de detección y clasificación de colisiones para vehículos de dos ruedas a partir de mediciones inerciales y de posicionamiento global \citep{gelmini2021_crash}. En Smaiah y col., se reconstruyeron trayectorias de motocicleta con un sistema multisenorial de bajo costo \citep{smaiah2018_trajectory}. En García Cuadra y col., se publicó una plataforma embebida abierta sobre microcontrolador STM32H7, con posicionamiento global de alta precisión, unidad de medición inercial, bus CAN con extensión CAN-FD, y enlace celular \citep{garcia2026_moto_telemetry}. Ese aporte evidencia la viabilidad de arquitecturas abiertas frente a registradores cerrados de competición.
