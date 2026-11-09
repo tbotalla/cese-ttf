@@ -101,13 +101,6 @@ El alcance comprendió el diseño e implementación de un prototipo embarcado so
 
 En el firmware se incluyó un sistema operativo de tiempo real para ejecutar de forma concurrente el muestreo de sensores, el registro en tarjeta de memoria removible y el enlace BLE. Esa organización buscó aislar las rutinas periódicas de las operaciones de entrada-salida de mayor latencia y mantener acotados los tiempos de respuesta del dispositivo.
 
-El diagrama de bloques del dispositivo (Figura~\ref{fig:alcance-diagrama-bloques}) describe su arquitectura general, integrada por los módulos de sensado, el microcontrolador, así como las conexiones de salida hacia el teléfono móvil, el almacenamiento extraíble y el puerto USB de depuración.
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.9\textwidth]{"Figures/Diagrama bloques.png"}
-	\caption{Diagrama de bloques del dispositivo.}
-	\label{fig:alcance-diagrama-bloques}
-\end{figure}
+La arquitectura de bloques del dispositivo y la interconexión de periféricos se presentan en el capítulo~\ref{Chapter2}.
 
 Quedaron fuera del alcance cualquier tipo de certificación u homologación del dispositivo, la conexión con la electrónica de la motocicleta mediante bus CAN u otros enlaces de diagnóstico, y el uso de servicios en la nube para almacenamiento remoto. Tampoco se buscó igualar el desempeño ni el costo de dispositivos comerciales de competición. El foco fue proveer una solución extensible y de costo moderado para conductores particulares.
