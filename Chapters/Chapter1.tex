@@ -101,6 +101,8 @@ El alcance comprendió el diseño e implementación de un prototipo embarcado so
 
 En el firmware se incluyó un sistema operativo de tiempo real para ejecutar de forma concurrente el muestreo de sensores, el registro en tarjeta de memoria removible y el enlace BLE. Esa organización buscó aislar las rutinas periódicas de las operaciones de entrada-salida de mayor latencia y mantener acotados los tiempos de respuesta del dispositivo.
 
+El diagrama de bloques del dispositivo (Figura~\ref{fig:alcance-diagrama-bloques}) describe su arquitectura general, integrada por los módulos de sensado, el microcontrolador, así como las conexiones de salida hacia el teléfono móvil, el almacenamiento extraíble y el puerto USB de depuración.
+
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.9\textwidth]{"Figures/Diagrama bloques.png"}
