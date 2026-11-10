@@ -10,7 +10,7 @@ Este capítulo describe los componentes de hardware y software de terceros integ
 
 La plataforma de desarrollo seleccionada fue la placa NUCLEO-F446RE \citep{st_nucleo_f446re}, que integra el microcontrolador STM32F446RET6 en encapsulado LQFP64 \citep{st_stm32f446re}. El núcleo es un procesador ARM Cortex-M4 con unidad de punto flotante y un conjunto de periféricos orientados a adquisición de datos, temporización y comunicación serie.
 
-La STM32F446RET6 permite operar el núcleo Cortex-M4 hasta 180~MHz, garantizando así la capacidad de cálculo necesaria para procesar con rapidez los datos provenientes de los distintos periféricos. Además, la placa integra un depurador ST-LINK con soporte para puerto COM virtual (UART), lo que permite registrar datos y ejecutar pruebas desde el entorno de desarrollo sin requerir hardware adicional.
+La STM32F446RET6 permite operar el núcleo Cortex-M4 hasta 180MHz, garantizando así la capacidad de cálculo necesaria para procesar con rapidez los datos provenientes de los distintos periféricos. Además, la placa integra un depurador ST-LINK con soporte para puerto COM virtual (UART), lo que permite registrar datos y ejecutar pruebas desde el entorno de desarrollo sin requerir hardware adicional.
 
 La elección de esta plataforma se basó en la disponibilidad de múltiples periféricos (controladores UART, I2C y SPI) accesibles a través de los conectores Arduino y Morpho. Esto resultó fundamental para interconectar simultáneamente el receptor GPS, la unidad de medición inercial, el módulo Bluetooth, y la memoria extraíble. Finalmente, el amplio ecosistema de desarrollo provisto por STMicroelectronics facilitó la implementación del firmware, agilizando la inicialización del proyecto y la adopción de diferentes middlewares y de la capa de abstracción de hardware (HAL).
 
@@ -43,7 +43,7 @@ En la tabla~\ref{tab:componentes-externos} se resume el conjunto de módulos con
 		\toprule
 		\textbf{Módulo} & \textbf{Función} & \textbf{Interfaz} & \textbf{Notas de uso} \\
 		\midrule
-		NEO-M8N & Posicionamiento GNSS & USART1 a 9600 baudios & Trazas en formato NMEA, recepción por interrupción \\
+		NEO-M8N & Posicionamiento GNSS & USART1 a 9600 baudios & Trazas en formato NMEA, recepción UART por DMA \\
 		LSM6DSO & Medición inercial (6 ejes) & I2C1 a 100~kHz & Dirección 7 bits 0x6A, acelerómetro y giroscopio integrados \\
 		HC-10 (BT05) & Enlace Bluetooth de baja energía & USART3 a 9600 baudios & Módulo serie transparente, perfil GATT en el teléfono \\
 		Tarjeta microSD & Registro local & SPI2 & Sistema de archivos FAT, registro de telemetría en CSV \\
@@ -56,9 +56,9 @@ El receptor GNSS NEO-M8N \citep{ublox_neo_m8n} entrega sentencias en formato NME
 
 La unidad LSM6DSO \citep{st_lsm6dso} concentra acelerómetro y giroscopio de tres ejes en un solo encapsulado. La dirección I2C seleccionada (0x6A) corresponde al nivel lógico bajo del pin de dirección del integrado. El módulo se montó sobre el bus I2C1 expuesto en los conectores Arduino de la placa Nucleo, lo que simplificó el cableado de prototipo.
 
-El módulo HC-10 (variante BT05 sobre CC2541) expone una interfaz serie transparente hacia el firmware. El enlace de baja energía queda del lado del controlador Bluetooth. Desde el microcontrolador la interacción se limita a enviar y recibir octetos por UART, de forma análoga a un cable serial corto.
+El módulo HC-10 (variante BT05 sobre CC2541) \citep{hc10_bt05} expuso una interfaz serie transparente hacia el firmware. El enlace de baja energía quedó del lado del controlador Bluetooth. Desde el microcontrolador la interacción se limitó a enviar y recibir octetos por UART, de forma análoga a un cable serie corto.
 
-La tarjeta microSD se acopló mediante un módulo adaptador SPI con alimentación a 5~V según el esquema del breakout utilizado. El registro en archivo CSV permite conservar series temporales aun cuando el teléfono no esté emparejado, y facilita la revisión posterior de trayectos en una computadora.
+La tarjeta microSD se acopló mediante un módulo adaptador SPI con alimentación a 5~V según el esquema del breakout utilizado. El registro en archivo CSV permitió conservar series temporales aun cuando el teléfono no estuviera emparejado, y facilitó la revisión posterior de trayectos en una computadora.
 
 En la figura~\ref{fig:interconexion-buses-cap2} se representa de forma esquemática la interconexión lógica entre la placa NUCLEO-F446RE, los buses configurados en el firmware y los periféricos del prototipo.
 
@@ -69,21 +69,13 @@ En la figura~\ref{fig:interconexion-buses-cap2} se representa de forma esquemát
 	\label{fig:interconexion-buses-cap2}
 \end{figure}
 
-El diagrama condensa las relaciones de la tabla~\ref{tab:componentes-externos}. El GNSS y el módulo Bluetooth emplean UART dedicadas, la unidad inercial comparte el bus I2C1 con el integrado central, y la microSD se accede por SPI2. El puerto serie del ST-LINK queda disponible para depuración sin formar parte del lazo de telemetría en el vehículo.
+El diagrama condensa las relaciones de la tabla~\ref{tab:componentes-externos}. El GNSS y el módulo Bluetooth emplearon UART dedicadas, la unidad inercial compartió el bus I2C1 con el integrado central, y la microSD se accedió por SPI2. El puerto serie del ST-LINK quedó disponible para depuración sin formar parte del lazo de telemetría en el vehículo.
 
 %----------------------------------------------------------------------------------------
 \section{Sistema operativo y middleware}
 \label{sec:rtos-middleware}
 
-El firmware del prototipo se ejecutó sobre un sistema operativo de tiempo real (RTOS, \textit{Real-Time Operating System}). Se empleó FreeRTOS \citep{freertos} integrado en el árbol de middleware de STM32Cube, con el planificador preemptivo por prioridades para asegurar plazos acotados en adquisición, registro y enlace inalámbrico.
-
-\subsection{Arquitectura concurrente y patrón de objetos activos}
-
-La estructura de la aplicación siguió el patrón \textit{active object}. Cada subsistema de interés se encapsuló en un objeto con cola de eventos propia y una tarea RTOS asociada. Las rutinas de interrupción y los callbacks de finalización por DMA no ejecutaron lógica de negocio. Solo publicaron mensajes en la cola del objeto correspondiente, de modo que el procesamiento quedara serializado en el contexto de la tarea.
-
-En el prototipo se distinguieron objetos activos alineados con los periféricos del capítulo~\ref{sec:componentes-externos}: adquisición inercial, receptor GNSS, persistencia en microSD y enlace UART hacia el módulo Bluetooth. Una tarea de coordinación concentró el armado de muestras de telemetría y la sincronización entre fuentes. El intercambio entre objetos se realizó mediante colas de mensajes y, cuando correspondió, semáforos binarios para arbitrar el bus SPI ante accesos de FatFs.
-
-Este diseño separó los contextos de prioridad: el muestreo periódico de la IMU y el despacho de tramas NMEA no compartían la pila con las escrituras de larga duración hacia la tarjeta. La latencia del enlace BLE quedó acotada por una cola dedicada de octetos de entrada y salida.
+El firmware del prototipo se ejecutó sobre un sistema operativo de tiempo real (RTOS, \textit{Real-Time Operating System}). Se empleó FreeRTOS \citep{freertos} integrado en el árbol de middleware de STM32Cube, con el planificador preemptivo por prioridades para asegurar plazos acotados en adquisición, registro y enlace inalámbrico. La arquitectura concurrente del firmware y el reparto en tareas y colas de mensajes se detallan en el capítulo~\ref{Chapter3}.
 
 \subsection{Capas de software de terceros}
 
@@ -91,16 +83,16 @@ Sobre el kernel RTOS se integraron las siguientes piezas de soporte:
 
 \begin{itemize}
 	\item CMSIS y HAL de STM32, generados con STM32CubeMX a partir del paquete de firmware STM32Cube para la familia F4, para acceso a GPIO, temporizadores, DMA y periféricos serie.
-	\item FreeRTOS, con APIs de tareas, colas, semáforos y temporizadores de software, como base del planificador y de la comunicación entre objetos activos.
+	\item FreeRTOS, con APIs de tareas, colas, semáforos y temporizadores de software, como base del planificador y de la comunicación entre módulos de firmware.
 	\item FatFs, integrado en el árbol de middleware del proyecto, para operar sobre la tarjeta microSD con partición FAT32.
 	\item Herramientas de verificación en el host (Ceedling \citep{ceedling} y Unity \citep{unity}) para pruebas unitarias de componentes de firmware, sin formar parte del binario embarcado.
 \end{itemize}
 
-La capa HAL abstrajo los registros de hardware en rutinas de configuración y ocultó los detalles del fabricante detrás de tipos comunes para UART, I2C y SPI. CMSIS aportó definiciones del núcleo Cortex-M y vectores de interrupción coherentes con la documentación del fabricante. Las llamadas al sistema de archivos se ejecutaron desde el objeto activo de almacenamiento, con exclusión mutua frente a otras tareas que pudieran disputar el mismo medio.
+La capa HAL abstrajo los registros de hardware en rutinas de configuración y ocultó los detalles del fabricante detrás de tipos comunes para UART, I2C y SPI. CMSIS aportó definiciones del núcleo Cortex-M y vectores de interrupción coherentes con la documentación del fabricante. Las llamadas al sistema de archivos se ejecutaron desde las tareas de aplicación, con exclusión mutua frente a otras tareas que pudieran disputar el mismo medio.
 
 \subsection{Aplicación móvil y servicios en el teléfono}
 
-En el lado del teléfono móvil se empleó una aplicación web progresiva \citep{mdn_pwa} desarrollada con React \citep{react} y Vite \citep{vite}. La comunicación con el prototipo utilizó la API Web Bluetooth \citep{w3c_web_bluetooth} del navegador, que expuso el perfil del módulo HC-10 hacia la capa de presentación (mapas y visualización de telemetría). Ese modelo evitó distribuir un binario nativo por medio de las tiendas de aplicaciones y permitió iterar la interfaz con las mismas tecnologías empleadas en el ecosistema web. Los mapas se apoyaron en bibliotecas de código abierto para teselas cartográficas. La interpretación de las tramas recibidas por BLE residió en el cliente y no en el microcontrolador.
+En el lado del teléfono móvil se empleó una aplicación web progresiva \citep{mdn_pwa} desarrollada con React \citep{react} y Vite \citep{vite}. La comunicación con el prototipo utilizó la API Web Bluetooth \citep{w3c_web_bluetooth} del navegador, que expuso el perfil del módulo HC-10 hacia la capa de presentación (mapas y visualización de telemetría). Ese modelo evitó distribuir un binario nativo por medio de las tiendas de aplicaciones y permitió iterar la interfaz con las mismas tecnologías empleadas en el ecosistema web. Los mapas se apoyaron en la biblioteca Leaflet \citep{leaflet} de código abierto. La interpretación de las tramas recibidas por BLE residió en el cliente y no en el microcontrolador.
 
 La figura~\ref{fig:capas-software-cap2} resume las relaciones entre las capas de software del microcontrolador y el cliente móvil. El detalle de tareas, colas de eventos, drivers y formatos de registro se describe en el capítulo~\ref{Chapter3}.
 
@@ -125,20 +117,20 @@ Los enlaces físicos entre el STM32F446 y los módulos externos se implementaron
 		\toprule
 		\textbf{Bus} & \textbf{Periférico} & \textbf{Tasa / modo} & \textbf{Rol en el sistema} \\
 		\midrule
-		USART1 & NEO-M8N & 9600 baudios & Recepción de tramas NMEA por interrupción \\
+		USART1 & NEO-M8N & 9600 baudios & Recepción de tramas NMEA por DMA a buffer circular \\
 		USART2 & ST-LINK VCP & 115200 baudios & Consola de depuración hacia el host \\
 		USART3 & HC-10 (BLE) & 9600 baudios & Enlace serie transparente con el teléfono \\
 		I2C1 & LSM6DSO & 100~kHz, maestro & Lectura periódica de registros de la IMU \\
-		SPI2 & microSD & Modo maestro & Almacenamiento de ficheros CSV vía FatFs \\
+		SPI2 & microSD & Modo maestro, DMA & Almacenamiento de ficheros CSV vía FatFs \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:parametros-buses}
 \end{table}
 
-En la comunicación UART asíncrona se configuraron tres instancias USART para el GPS (9600 baudios), la depuración por ST-LINK (115200 baudios) y el módulo Bluetooth (9600 baudios). El enlace con el receptor NEO-M8N se apoyó en esas sentencias NMEA para obtener coordenadas y tiempo de referencia. Las sentencias se acumularon en un buffer y se descartaron tramas incompletas antes de interpretarlas. En el módulo BLE el UART actuó como túnel serie hacia el controlador CC2541. No se implementó un protocolo propietario encima de los octetos en el firmware embarcado.
+En la comunicación UART asíncrona se configuraron tres instancias USART para el GPS (9600 baudios), la depuración por ST-LINK (115200 baudios) y el módulo Bluetooth (9600 baudios). El enlace con el receptor NEO-M8N se apoyó en sentencias NMEA para obtener coordenadas y tiempo de referencia. La recepción en USART1 se realizó por DMA hacia un buffer circular, de modo de reducir la carga de interrupciones ante ráfagas de tramas. Las sentencias se acumularon en ese buffer y se descartaron tramas incompletas antes de interpretarlas. La depuración y el módulo HC-10 operaron sin DMA, con una carga de tráfico inferior. En el módulo BLE el UART actuó como túnel serie hacia el controlador CC2541. No se implementó un protocolo propietario encima de los octetos en el firmware embarcado.
 
 El bus I2C1 conectó la IMU LSM6DSO en modo maestro a 100~kHz. Los registros del sensor se accedieron mediante direccionamiento de 7 bits y lecturas de bloques para aceleración y velocidad angular.
 
-El bus SPI2 enlazó la tarjeta microSD en modo maestro con una línea de selección de esclavo dedicada. Las operaciones de lectura y escritura se tradujeron a llamadas al middleware FatFs sobre ficheros en formato CSV. Se asumió el uso de una partición FAT32 y un tamaño de cluster compatible con tarjetas de uso general de hasta 32~GB.
+El bus SPI2 enlazó la tarjeta microSD en modo maestro con una línea de selección de esclavo dedicada. Las transferencias en bloque hacia la tarjeta se apoyaron en DMA, alineadas con lo descrito en la sección~\ref{sec:plataforma-hardware}. Las operaciones de lectura y escritura se tradujeron a llamadas al middleware FatFs sobre ficheros en formato CSV. Se asumió el uso de una partición FAT32 y un tamaño de cluster compatible con tarjetas de uso general de hasta 32~GB.
 
 A nivel de aplicación móvil, el intercambio con el usuario se realizó mediante el perfil GATT expuesto por el módulo (servicio y característica de datos serie), mientras que la persistencia local en el vehículo dependió del sistema de archivos FAT ya referido en el microcontrolador. Las capas descritas en este capítulo se integran en el diseño detallado del capítulo~\ref{Chapter3}, donde se explicitan los módulos de firmware y los formatos de registro adoptados.
