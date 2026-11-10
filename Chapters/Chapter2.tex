@@ -1,184 +1,144 @@
-\chapter{Introducción específica} % Main chapter title
+\chapter{Introducción específica}
 
 \label{Chapter2}
 
+Este capítulo describe los componentes de hardware y software de terceros integrados en el prototipo de telemetría. En particular, se detallan el microcontrolador central, los módulos externos de sensado y comunicación, las capas de firmware base, y los protocolos de enlace físico. Por su parte, el diseño y la implementación a medida se abordan en el capítulo~\ref{Chapter3}.
+
 %----------------------------------------------------------------------------------------
-%	SECTION 1
+\section{Plataforma de hardware}
+\label{sec:plataforma-hardware}
+
+La plataforma de desarrollo seleccionada fue la placa NUCLEO-F446RE \citep{st_nucleo_f446re}, que integra el microcontrolador STM32F446RET6 en encapsulado LQFP64 \citep{st_stm32f446re}. El núcleo es un procesador ARM Cortex-M4 con unidad de punto flotante y un conjunto de periféricos orientados a adquisición de datos, temporización y comunicación serie.
+
+La STM32F446RET6 permite operar el núcleo Cortex-M4 hasta 180~MHz, garantizando así la capacidad de cálculo necesaria para procesar con rapidez los datos provenientes de los distintos periféricos. Además, la placa integra un depurador ST-LINK con soporte para puerto COM virtual (UART), lo que permite registrar datos y ejecutar pruebas desde el entorno de desarrollo sin requerir hardware adicional.
+
+La elección de esta plataforma se basó en la disponibilidad de múltiples periféricos (controladores UART, I2C y SPI) accesibles a través de los conectores Arduino y Morpho. Esto resultó fundamental para interconectar simultáneamente el receptor GPS, la unidad de medición inercial, el módulo Bluetooth, y la memoria extraíble. Finalmente, el amplio ecosistema de desarrollo provisto por STMicroelectronics facilitó la implementación del firmware, agilizando la inicialización del proyecto y la adopción de diferentes middlewares y de la capa de abstracción de hardware (HAL).
+
+\subsection{Recursos del microcontrolador empleados}
+
+En el integrado STM32F446RET6 se empleó la memoria flash interna para el código fuente, y la SRAM interna para pilas, colas circulares y buffers de los distintos canales. Esa organización permitió alojar el sistema de archivos FatFs \citep{chan_fatfs} y las estructuras de telemetría sin recurrir a memorias externas de programa.
+
+La asignación de los periféricos de comunicación se estableció en función del diseño de hardware del prototipo. En particular, se configuraron tres interfaces UART: una para la recepción de tramas NMEA del módulo GPS, otra para el enlace con el módulo Bluetooth de baja energía, y una tercera destinada a la consola de depuración vía ST-LINK. Por su parte, la comunicación con la unidad inercial (LSM6DSO) se resolvió mediante el bus I2C1, mientras que el bus SPI2 se destinó al controlador de la tarjeta microSD para gestionar las transferencias en bloque requeridas por el middleware de archivos.
+
+Con el propósito de optimizar la adquisición de datos, se habilitó el acceso directo a memoria (DMA, \textit{Direct Memory Access}) exclusivamente en los canales de mayor tráfico: la recepción UART de tramas NMEA y las transferencias en bloque vía SPI hacia la memoria microSD. Esta configuración permitió direccionar los datos hacia buffers circulares de forma asíncrona, minimizando la intervención de la CPU ante ráfagas de comunicación y operaciones de escritura. En contraste, los enlaces I2C con la unidad inercial y UART de depuración operaron sin DMA, dada su menor demanda de ancho de banda. Así, los recursos del procesador se concentraron en el muestreo inercial y la orquestación del registro, gobernados por los temporizadores de propósito general.
+
+Finalmente, la tolerancia a fallos del firmware se garantizó mediante la integración de un IWDG (\textit{Independent Watchdog}). Una tarea de supervisión del RTOS actualizó periódicamente su contador. Ante cualquier bloqueo prolongado del planificador o de los objetos activos, el sistema embebido se reinició de forma automática y recuperó un estado operativo seguro.
+
+\subsection{Entorno de desarrollo y depuración}
+
+El proyecto de firmware se generó y mantuvo con STM32CubeMX y se compiló con la cadena GNU para ARM (arm-none-eabi-gcc) integrada en STM32CubeIDE \citep{st_stm32cubeide}. La configuración de pines, relojes y instancias de periféricos se versionó en un archivo de descripción del microcontrolador, de modo de reconstruir el hardware lógico ante cambios de cableado. La depuración y el registro de eventos en etapas intermedias se realizaron por el puerto virtual del ST-LINK, sin exigir un analizador lógico externo para la validación básica de los buses.
+
 %----------------------------------------------------------------------------------------
-Todos los capítulos deben comenzar con un breve párrafo introductorio que indique cuál es el contenido que se encontrará al leerlo.  La redacción sobre el contenido de la memoria debe hacerse en presente y todo lo referido al proyecto en pasado, siempre de modo impersonal.
+\section{Componentes y módulos externos}
+\label{sec:componentes-externos}
 
-\section{Estilo y convenciones}
-\label{sec:ejemplo}
+El prototipo cablea al microcontrolador un conjunto de módulos de adquisición, comunicación y almacenamiento: receptor GNSS \citep{gnss_overview}, unidad inercial de seis ejes, transceptor Bluetooth de baja energía y tarjeta microSD. A continuación se presenta una síntesis tabular y, en los párrafos siguientes, el detalle de acoplamiento de cada módulo.
 
-\subsection{Uso de mayúscula inicial para los título de secciones}
+En la tabla~\ref{tab:componentes-externos} se resume el conjunto de módulos conectados al microcontrolador, la interfaz física empleada y notas de configuración relevantes para el firmware.
 
-Si en el texto se hace alusión a diferentes partes del trabajo referirse a ellas como capítulo, sección o subsección según corresponda. Por ejemplo: ``En el capítulo \ref{Chapter1} se explica tal cosa'', o ``En la sección \ref{sec:ejemplo} se presenta lo que sea'', o ``En la subsección \ref{subsec:ejemplo} se discute otra cosa''.
+\begin{table}[htbp]
+	\centering
+	\caption[Módulos del prototipo]{Módulos externos del prototipo y su acoplamiento al microcontrolador.}
+	\begin{tabular}{p{2.4cm}p{3.2cm}p{2.6cm}p{5.2cm}}
+		\toprule
+		\textbf{Módulo} & \textbf{Función} & \textbf{Interfaz} & \textbf{Notas de uso} \\
+		\midrule
+		NEO-M8N & Posicionamiento GNSS & USART1 a 9600 baudios & Trazas en formato NMEA, recepción por interrupción \\
+		LSM6DSO & Medición inercial (6 ejes) & I2C1 a 100~kHz & Dirección 7 bits 0x6A, acelerómetro y giroscopio integrados \\
+		HC-10 (BT05) & Enlace Bluetooth de baja energía & USART3 a 9600 baudios & Módulo serie transparente, perfil GATT en el teléfono \\
+		Tarjeta microSD & Registro local & SPI2 & Sistema de archivos FAT, registro de telemetría en CSV \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:componentes-externos}
+\end{table}
 
-Cuando se quiere poner una lista tabulada, se hace así:
+El receptor GNSS NEO-M8N \citep{ublox_neo_m8n} entrega sentencias en formato NMEA \citep{nmea_0183} que el firmware interpreta para obtener posición y tiempo. Opera a 3.3~V, se enlaza por UART cruzada al microcontrolador y mantiene una tasa de 9600 baudios compatible con la configuración por defecto del módulo.
+
+La unidad LSM6DSO \citep{st_lsm6dso} concentra acelerómetro y giroscopio de tres ejes en un solo encapsulado. La dirección I2C seleccionada (0x6A) corresponde al nivel lógico bajo del pin de dirección del integrado. El módulo se montó sobre el bus I2C1 expuesto en los conectores Arduino de la placa Nucleo, lo que simplificó el cableado de prototipo.
+
+El módulo HC-10 (variante BT05 sobre CC2541) expone una interfaz serie transparente hacia el firmware. El enlace de baja energía queda del lado del controlador Bluetooth. Desde el microcontrolador la interacción se limita a enviar y recibir octetos por UART, de forma análoga a un cable serial corto.
+
+La tarjeta microSD se acopló mediante un módulo adaptador SPI con alimentación a 5~V según el esquema del breakout utilizado. El registro en archivo CSV permite conservar series temporales aun cuando el teléfono no esté emparejado, y facilita la revisión posterior de trayectos en una computadora.
+
+En la figura~\ref{fig:interconexion-buses-cap2} se representa de forma esquemática la interconexión lógica entre la placa NUCLEO-F446RE, los buses configurados en el firmware y los periféricos del prototipo.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.92\textwidth]{Figures/cap2-interconexion-buses.png}
+	\caption{Interconexión lógica entre el microcontrolador y los periféricos del prototipo.}
+	\label{fig:interconexion-buses-cap2}
+\end{figure}
+
+El diagrama condensa las relaciones de la tabla~\ref{tab:componentes-externos}. El GNSS y el módulo Bluetooth emplean UART dedicadas, la unidad inercial comparte el bus I2C1 con el integrado central, y la microSD se accede por SPI2. El puerto serie del ST-LINK queda disponible para depuración sin formar parte del lazo de telemetría en el vehículo.
+
+%----------------------------------------------------------------------------------------
+\section{Sistema operativo y middleware}
+\label{sec:rtos-middleware}
+
+El firmware del prototipo se ejecutó sobre un sistema operativo de tiempo real (RTOS, \textit{Real-Time Operating System}). Se empleó FreeRTOS \citep{freertos} integrado en el árbol de middleware de STM32Cube, con el planificador preemptivo por prioridades para asegurar plazos acotados en adquisición, registro y enlace inalámbrico.
+
+\subsection{Arquitectura concurrente y patrón de objetos activos}
+
+La estructura de la aplicación siguió el patrón \textit{active object}. Cada subsistema de interés se encapsuló en un objeto con cola de eventos propia y una tarea RTOS asociada. Las rutinas de interrupción y los callbacks de finalización por DMA no ejecutaron lógica de negocio. Solo publicaron mensajes en la cola del objeto correspondiente, de modo que el procesamiento quedara serializado en el contexto de la tarea.
+
+En el prototipo se distinguieron objetos activos alineados con los periféricos del capítulo~\ref{sec:componentes-externos}: adquisición inercial, receptor GNSS, persistencia en microSD y enlace UART hacia el módulo Bluetooth. Una tarea de coordinación concentró el armado de muestras de telemetría y la sincronización entre fuentes. El intercambio entre objetos se realizó mediante colas de mensajes y, cuando correspondió, semáforos binarios para arbitrar el bus SPI ante accesos de FatFs.
+
+Este diseño separó los contextos de prioridad: el muestreo periódico de la IMU y el despacho de tramas NMEA no compartían la pila con las escrituras de larga duración hacia la tarjeta. La latencia del enlace BLE quedó acotada por una cola dedicada de octetos de entrada y salida.
+
+\subsection{Capas de software de terceros}
+
+Sobre el kernel RTOS se integraron las siguientes piezas de soporte:
 
 \begin{itemize}
-	\item Este es el primer elemento de la lista.
-	\item Este es el segundo elemento de la lista.
+	\item CMSIS y HAL de STM32, generados con STM32CubeMX a partir del paquete de firmware STM32Cube para la familia F4, para acceso a GPIO, temporizadores, DMA y periféricos serie.
+	\item FreeRTOS, con APIs de tareas, colas, semáforos y temporizadores de software, como base del planificador y de la comunicación entre objetos activos.
+	\item FatFs, integrado en el árbol de middleware del proyecto, para operar sobre la tarjeta microSD con partición FAT32.
+	\item Herramientas de verificación en el host (Ceedling \citep{ceedling} y Unity \citep{unity}) para pruebas unitarias de componentes de firmware, sin formar parte del binario embarcado.
 \end{itemize}
 
-Notar el uso de las mayúsculas y el punto al final de cada elemento.
+La capa HAL abstrajo los registros de hardware en rutinas de configuración y ocultó los detalles del fabricante detrás de tipos comunes para UART, I2C y SPI. CMSIS aportó definiciones del núcleo Cortex-M y vectores de interrupción coherentes con la documentación del fabricante. Las llamadas al sistema de archivos se ejecutaron desde el objeto activo de almacenamiento, con exclusión mutua frente a otras tareas que pudieran disputar el mismo medio.
 
-Si se desea poner una lista numerada el formato es este:
+\subsection{Aplicación móvil y servicios en el teléfono}
 
-\begin{enumerate}
-	\item Este es el primer elemento de la lista.
-	\item Este es el segundo elemento de la lista.
-\end{enumerate}
+En el lado del teléfono móvil se empleó una aplicación web progresiva \citep{mdn_pwa} desarrollada con React \citep{react} y Vite \citep{vite}. La comunicación con el prototipo utilizó la API Web Bluetooth \citep{w3c_web_bluetooth} del navegador, que expuso el perfil del módulo HC-10 hacia la capa de presentación (mapas y visualización de telemetría). Ese modelo evitó distribuir un binario nativo por medio de las tiendas de aplicaciones y permitió iterar la interfaz con las mismas tecnologías empleadas en el ecosistema web. Los mapas se apoyaron en bibliotecas de código abierto para teselas cartográficas. La interpretación de las tramas recibidas por BLE residió en el cliente y no en el microcontrolador.
 
-Notar el uso de las mayúsculas y el punto al final de cada elemento.
+La figura~\ref{fig:capas-software-cap2} resume las relaciones entre las capas de software del microcontrolador y el cliente móvil. El detalle de tareas, colas de eventos, drivers y formatos de registro se describe en el capítulo~\ref{Chapter3}.
 
-\subsection{Este es el título de una subsección}
-\label{subsec:ejemplo}
-
-Se recomienda no utilizar \textbf{texto en negritas} en ningún párrafo, ni tampoco texto \underline{subrayado}. En cambio sí se debe utilizar \textit{texto en itálicas} para palabras en un idioma extranjero, al menos la primera vez que aparecen en el texto. En el caso de palabras que estamos inventando se deben utilizar ``comillas'', así como también para citas textuales. Por ejemplo, un \textit{digital filter} es una especie de ``selector'' que permite separar ciertos componentes armónicos en particular.
-
-La escritura debe ser impersonal. Por ejemplo, no utilizar ``el diseño del firmware lo hice de acuerdo con tal principio'', sino ``el firmware fue diseñado utilizando tal principio''. 
-
-El trabajo es algo que al momento de escribir la memoria se supone que ya está concluido, entonces todo lo que se refiera a hacer el trabajo se narra en tiempo pasado, porque es algo que ya ocurrió. Por ejemplo, "se diseñó el firmware empleando la técnica de test driven development".
-
-En cambio, la memoria es algo que está vivo cada vez que el lector la lee. Por eso transcurre siempre en tiempo presente, como por ejemplo:
-
-``En el presente capítulo se da una visión global sobre las distintas pruebas realizadas y los resultados obtenidos. Se explica el modo en que fueron llevados a cabo los test unitarios y las pruebas del sistema''.
-
-Se recomienda no utilizar una sección de glosario sino colocar la descripción de las abreviaturas como parte del mismo cuerpo del texto. Por ejemplo, RTOS (\textit{Real Time Operating System}, Sistema Operativo de Tiempo Real) o en caso de considerarlo apropiado mediante notas a pie de página.
-
-Si se desea indicar alguna página web utilizar el siguiente formato de referencias bibliográficas, dónde las referencias se detallan en la sección de bibliografía de la memoria, utilizado el formato establecido por IEEE.% \citep{IEEE:citation}. Por ejemplo, ``el presente trabajo se basa en la plataforma EDU-CIAA-NXP % \citep{CIAA}, la cual...''.
-
-\subsection{Figuras} 
-
-Al insertar figuras en la memoria se deben considerar determinadas pautas. Para empezar, usar siempre tipografía claramente legible. Luego, tener claro que \textbf{es incorrecto} escribir por ejemplo esto: ``El diseño elegido es un cuadrado, como se ve en la siguiente figura:''
-
-\begin{figure}[h]
-\centering
-\includegraphics[scale=.45]{./Figures/cuadradoAzul.png}
-\end{figure}
-
-La forma correcta de utilizar una figura es con referencias cruzadas, por ejemplo: ``Se eligió utilizar un cuadrado azul para el logo, como puede observarse en la figura \ref{fig:cuadradoAzul}''.
-
-\begin{figure}[ht]
+\begin{figure}[htbp]
 	\centering
-	\includegraphics[scale=.45]{./Figures/cuadradoAzul.png}
-	\caption{Ilustración del cuadrado azul que se eligió para el diseño del logo.}
-	\label{fig:cuadradoAzul}
+	% Fuente editable: Figures/cap2-capas-software.mmd (mermaid-cli)
+	\includegraphics[width=0.95\textwidth]{Figures/cap2-capas-software.png}
+	\caption{Capas de software en el microcontrolador y en el teléfono móvil.}
+	\label{fig:capas-software-cap2}
 \end{figure}
 
-El texto de las figuras debe estar siempre en español, excepto que se decida reproducir una figura original tomada de alguna referencia. En ese caso la referencia de la cual se tomó la figura debe ser indicada en el epígrafe de la figura e incluida como una nota al pie, como se ilustra en la figura \ref{fig:palabraIngles}.
+%----------------------------------------------------------------------------------------
+\section{Protocolos y buses de comunicación}
+\label{sec:protocolos-buses}
 
-\begin{figure}[htpb]
+Los enlaces físicos entre el STM32F446 y los módulos externos se implementaron con tres familias de interfaz habituales en adquisición de sensores y almacenamiento local. En la tabla~\ref{tab:parametros-buses} se resumen las instancias configuradas en el prototipo.
+
+\begin{table}[htbp]
 	\centering
-	\includegraphics[scale=.3]{./Figures/word.jpeg}
-	\caption{Imagen tomada de la página oficial del procesador\protect\footnotemark.}
-	\label{fig:palabraIngles}
-\end{figure}
-
-\footnotetext{Imagen tomada de \url{https://goo.gl/images/i7C70w}}
-
-La figura y el epígrafe deben conformar una unidad cuyo significado principal pueda ser comprendido por el lector sin necesidad de leer el cuerpo central de la memoria. Para eso es necesario que el epígrafe sea todo lo detallado que corresponda y si en la figura se utilizan abreviaturas entonces aclarar su significado en el epígrafe o en la misma figura.
-
-
-
-\begin{figure}[ht]
-	\centering
-	\includegraphics[scale=.37]{./Figures/questionMark.png}
-	\caption{¿Por qué de pronto aparece esta figura?}
-	\label{fig:questionMark}
-\end{figure}
-
-Nunca colocar una figura en el documento antes de hacer la primera referencia a ella, como se ilustra con la figura \ref{fig:questionMark}, porque sino el lector no comprenderá por qué de pronto aparece la figura en el documento, lo que distraerá su atención.
-
-Otra posibilidad es utilizar el entorno \textit{subfigure} para incluir más de una figura, como se puede ver en la figura \ref{fig:three graphs}. Notar que se pueden referenciar también las figuras internas individualmente de esta manera: \ref{fig:1de3}, \ref{fig:2de3} y \ref{fig:3de3}.
- 
-\begin{figure}[!htpb]
-     \centering
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width=.65\textwidth]{./Figures/questionMark}
-         \caption{Un caption.}
-         \label{fig:1de3}
-     \end{subfigure}
-     \hfill
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width=.65\textwidth]{./Figures/questionMark}
-         \caption{Otro.}
-         \label{fig:2de3}
-     \end{subfigure}
-     \hfill
-     \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width=.65\textwidth]{./Figures/questionMark}
-         \caption{Y otro más.}
-         \label{fig:3de3}
-     \end{subfigure}
-        \caption{Tres gráficos simples.}
-        \label{fig:three graphs}
-\end{figure}
-
-El código para generar las imágenes se encuentra disponible para su reutilización en el archivo \file{Chapter2.tex}.
-
-\subsection{Tablas}
-
-Para las tablas utilizar el mismo formato que para las figuras, sólo que el epígrafe se debe colocar arriba de la tabla, como se ilustra en la tabla \ref{tab:peces}. Observar que sólo algunas filas van con líneas visibles y notar el uso de las negritas para los encabezados.  La referencia se logra utilizando el comando \verb|\ref{<label>}| donde label debe estar definida dentro del entorno de la tabla.
-
-\begin{verbatim}
-\begin{table}[h]
-	\centering
-	\caption[caption corto]{caption largo más descriptivo}
-	\begin{tabular}{l c c}    
+	\caption[Parámetros de buses]{Parámetros de los buses serie y paralelos configurados en el prototipo.}
+	\begin{tabular}{lccp{5.0cm}}
 		\toprule
-		\textbf{Especie}     & \textbf{Tamaño} & \textbf{Valor}\\
+		\textbf{Bus} & \textbf{Periférico} & \textbf{Tasa / modo} & \textbf{Rol en el sistema} \\
 		\midrule
-		Amphiprion Ocellaris & 10 cm           & \$ 6.000 \\		
-		Hepatus Blue Tang    & 15 cm           & \$ 7.000 \\
-		Zebrasoma Xanthurus  & 12 cm           & \$ 6.800 \\
+		USART1 & NEO-M8N & 9600 baudios & Recepción de tramas NMEA por interrupción \\
+		USART2 & ST-LINK VCP & 115200 baudios & Consola de depuración hacia el host \\
+		USART3 & HC-10 (BLE) & 9600 baudios & Enlace serie transparente con el teléfono \\
+		I2C1 & LSM6DSO & 100~kHz, maestro & Lectura periódica de registros de la IMU \\
+		SPI2 & microSD & Modo maestro & Almacenamiento de ficheros CSV vía FatFs \\
 		\bottomrule
-		\hline
 	\end{tabular}
-	\label{tab:peces}
-\end{table}
-\end{verbatim}
-
-
-\begin{table}[h]
-	\centering
-	\caption[caption corto]{caption largo más descriptivo.}
-	\begin{tabular}{l c c}    
-		\toprule
-		\textbf{Especie} 	 & \textbf{Tamaño} 		& \textbf{Valor}  \\
-		\midrule
-		Amphiprion Ocellaris & 10 cm 				& \$ 6.000 \\		
-		Hepatus Blue Tang	 & 15 cm				& \$ 7.000 \\
-		Zebrasoma Xanthurus	 & 12 cm				& \$ 6.800 \\
-		\bottomrule
-		\hline
-	\end{tabular}
-	\label{tab:peces}
+	\label{tab:parametros-buses}
 \end{table}
 
-En cada capítulo se debe reiniciar el número de conteo de las figuras y las tablas, por ejemplo, figura 2.1 o tabla 2.1, pero no se debe reiniciar el conteo en cada sección. Por suerte la plantilla se encarga de esto por nosotros.
+En la comunicación UART asíncrona se configuraron tres instancias USART para el GPS (9600 baudios), la depuración por ST-LINK (115200 baudios) y el módulo Bluetooth (9600 baudios). El enlace con el receptor NEO-M8N se apoyó en esas sentencias NMEA para obtener coordenadas y tiempo de referencia. Las sentencias se acumularon en un buffer y se descartaron tramas incompletas antes de interpretarlas. En el módulo BLE el UART actuó como túnel serie hacia el controlador CC2541. No se implementó un protocolo propietario encima de los octetos en el firmware embarcado.
 
-\subsection{Ecuaciones}
-\label{sec:Ecuaciones}
+El bus I2C1 conectó la IMU LSM6DSO en modo maestro a 100~kHz. Los registros del sensor se accedieron mediante direccionamiento de 7 bits y lecturas de bloques para aceleración y velocidad angular.
 
-Al insertar ecuaciones en la memoria dentro de un entorno \textit{equation}, éstas se numeran en forma automática  y se pueden referir al igual que como se hace con las figuras y tablas, por ejemplo ver la ecuación \ref{eq:metric}.
+El bus SPI2 enlazó la tarjeta microSD en modo maestro con una línea de selección de esclavo dedicada. Las operaciones de lectura y escritura se tradujeron a llamadas al middleware FatFs sobre ficheros en formato CSV. Se asumió el uso de una partición FAT32 y un tamaño de cluster compatible con tarjetas de uso general de hasta 32~GB.
 
-\begin{equation}
-	\label{eq:metric}
-	ds^2 = c^2 dt^2 \left( \frac{d\sigma^2}{1-k\sigma^2} + \sigma^2\left[ d\theta^2 + \sin^2\theta d\phi^2 \right] \right)
-\end{equation}
-                                                        
-Para generar la ecuación \ref{eq:metric} se utilizó el siguiente código:
-
-\begin{verbatim}
-\begin{equation}
-	\label{eq:metric}
-	ds^2 = c^2 dt^2 \left( \frac{d\sigma^2}{1-k\sigma^2} + 
-	\sigma^2\left[ d\theta^2 + 
-	\sin^2\theta d\phi^2 \right] \right)
-\end{equation}
-\end{verbatim}
+A nivel de aplicación móvil, el intercambio con el usuario se realizó mediante el perfil GATT expuesto por el módulo (servicio y característica de datos serie), mientras que la persistencia local en el vehículo dependió del sistema de archivos FAT ya referido en el microcontrolador. Las capas descritas en este capítulo se integran en el diseño detallado del capítulo~\ref{Chapter3}, donde se explicitan los módulos de firmware y los formatos de registro adoptados.
