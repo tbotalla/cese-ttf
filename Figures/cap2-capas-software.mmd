@@ -1,0 +1,37 @@
+%% Figura 2.2 — Capas de software (flujo izquierda → derecha)
+%% Regenerar: mmdc -i cap2-capas-software.mmd -o cap2-capas-software.png -b white -C cap2-capas-software.css -w 1800 -s 1.15
+%%{init: {
+  "themeVariables": {
+    "fontSize": "20px",
+    "clusterBkg": "#ffffff",
+    "background": "#ffffff"
+  },
+  "themeCSS": ".nodeLabel { font-size: 24px !important; text-align: center !important; } .nodeLabel p { text-align: center !important; margin: 0 auto !important; } .cluster-label .nodeLabel { font-size: 22px !important; text-align: center !important; }",
+  "flowchart": {
+    "htmlLabels": false,
+    "nodeSpacing": 32,
+    "rankSpacing": 50,
+    "curve": "linear"
+  }
+}}%%
+flowchart LR
+  classDef lbl fill:#ffffff,stroke:#ffffff,color:#000000,font-size:18px
+
+  subgraph PHONE["Teléfono móvil"]
+    PWA["PWA"]
+  end
+
+  LGATT["GATT"]:::lbl
+  LINK["Enlace BLE\nHC-10"]
+  LUART["USART3"]:::lbl
+
+  subgraph STACK["Firmware en STM32F446"]
+    direction LR
+    APP["Objetos activos"]
+    RTOS["FreeRTOS"]
+    DRV["FatFs, CMSIS y HAL STM32"]
+    HW["Módulos cableados"]
+    APP --> RTOS --> DRV --> HW
+  end
+
+  PWA --> LGATT --> LINK --> LUART --> APP
