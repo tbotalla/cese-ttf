@@ -22,7 +22,7 @@ La asignación de los periféricos de comunicación se estableció en función d
 
 Con el propósito de optimizar la adquisición de datos, se habilitó el acceso directo a memoria (DMA, del inglés \textit{Direct Memory Access}) exclusivamente en los canales de mayor tráfico: la recepción UART de tramas NMEA y las transferencias en bloque vía SPI hacia la memoria microSD. Esta configuración permitió direccionar los datos hacia buffers circulares de forma asíncrona y redujo la intervención de la CPU ante ráfagas de comunicación y operaciones de escritura. En contraste, los enlaces I2C con la unidad inercial y UART de depuración operaron sin DMA, dada su menor demanda de ancho de banda. Así, los recursos del procesador se concentraron en el muestreo inercial y la orquestación del registro, gobernados por los temporizadores de propósito general.
 
-Finalmente, la tolerancia a fallos del firmware se garantizó mediante la integración de un IWDG (\textit{Independent Watchdog}). Una tarea de supervisión del RTOS actualizó periódicamente su contador. Ante cualquier bloqueo prolongado del planificador o de los objetos activos, el sistema embebido se reinició de forma automática y recuperó un estado operativo seguro.
+Finalmente, la tolerancia a fallos del firmware se garantizó mediante la integración de un IWDG (del inglés \textit{Independent Watchdog}). Una tarea de supervisión del RTOS actualizó periódicamente su contador. Ante cualquier bloqueo prolongado del planificador o de los objetos activos, el sistema embebido se reinició de forma automática y recuperó un estado operativo seguro.
 
 \subsection{Entorno de desarrollo y depuración}
 
