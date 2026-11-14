@@ -26,7 +26,7 @@ Finalmente, la tolerancia a fallos del firmware se garantizó mediante la integr
 
 \subsection{Entorno de desarrollo y depuración}
 
-El proyecto de firmware se generó y mantuvo con STM32CubeMX y se compiló con la cadena GNU para ARM (arm-none-eabi-gcc) integrada en STM32CubeIDE \citep{st_stm32cubeide}. La configuración de pines, relojes y instancias de periféricos se versionó en un archivo de descripción del microcontrolador, de modo de reconstruir el hardware lógico ante cambios de cableado. La depuración y el registro de eventos en etapas intermedias se realizaron por el puerto virtual del ST-LINK, sin exigir un analizador lógico externo para la validación básica de los buses.
+El proyecto de firmware se generó y mantuvo con STM32CubeMX y se compiló con la cadena GNU para ARM (arm-none-eabi-gcc) integrada en STM32CubeIDE \citep{st_stm32cubeide}. La configuración de pines, relojes e instancias de periféricos se versionó en un archivo de descripción del microcontrolador, de modo de reconstruir el hardware lógico ante cambios de cableado. La depuración y el registro de eventos en etapas intermedias se realizaron por el puerto virtual del ST-LINK, sin exigir un analizador lógico externo para la validación básica de los buses.
 
 %----------------------------------------------------------------------------------------
 \section{Componentes y módulos externos}
@@ -36,10 +36,11 @@ El prototipo cablea al microcontrolador un conjunto de módulos de adquisición,
 
 En la tabla~\ref{tab:componentes-externos} se resume el conjunto de módulos conectados al microcontrolador, la interfaz física empleada y notas de configuración relevantes para el firmware.
 
-\begin{table}[htbp]
+\begin{table}[H]
 	\centering
 	\caption[Módulos del prototipo]{Módulos externos del prototipo y su acoplamiento al microcontrolador.}
-	\begin{tabular}{p{2.4cm}p{3.2cm}p{2.6cm}p{5.2cm}}
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.85cm}>{\raggedright\arraybackslash}p{2.55cm}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X@{}}
 		\toprule
 		\textbf{Módulo} & \textbf{Función} & \textbf{Interfaz} & \textbf{Notas de uso} \\
 		\midrule
@@ -48,7 +49,7 @@ En la tabla~\ref{tab:componentes-externos} se resume el conjunto de módulos con
 		HC-10 (BT05) & Enlace Bluetooth de baja energía & USART3 a 9600 baudios & Módulo serie transparente, perfil GATT en el teléfono \\
 		Tarjeta microSD & Registro local & SPI2 & Sistema de archivos FAT, registro de telemetría en CSV \\
 		\bottomrule
-	\end{tabular}
+	\end{tabularx}
 	\label{tab:componentes-externos}
 \end{table}
 
@@ -110,10 +111,11 @@ La figura~\ref{fig:capas-software-cap2} resume las relaciones entre las capas de
 
 Los enlaces físicos entre el STM32F446 y los módulos externos se implementaron con tres familias de interfaz habituales en adquisición de sensores y almacenamiento local. En la tabla~\ref{tab:parametros-buses} se resumen las instancias configuradas en el prototipo.
 
-\begin{table}[htbp]
+\begin{table}[H]
 	\centering
 	\caption[Parámetros de buses]{Parámetros de los buses serie y paralelos configurados en el prototipo.}
-	\begin{tabular}{lccp{5.0cm}}
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.45cm}>{\raggedright\arraybackslash}p{1.95cm}>{\raggedright\arraybackslash}p{2.35cm}>{\raggedright\arraybackslash}X@{}}
 		\toprule
 		\textbf{Bus} & \textbf{Periférico} & \textbf{Tasa / modo} & \textbf{Rol en el sistema} \\
 		\midrule
@@ -123,7 +125,7 @@ Los enlaces físicos entre el STM32F446 y los módulos externos se implementaron
 		I2C1 & LSM6DSO & 100~kHz, maestro & Lectura periódica de registros de la IMU \\
 		SPI2 & microSD & Modo maestro, DMA & Almacenamiento de ficheros CSV vía FatFs \\
 		\bottomrule
-	\end{tabular}
+	\end{tabularx}
 	\label{tab:parametros-buses}
 \end{table}
 
