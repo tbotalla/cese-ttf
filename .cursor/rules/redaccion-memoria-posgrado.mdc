@@ -1,0 +1,30 @@
+---
+description: Pautas de redacción académica para la memoria CESE (TTF A)
+globs: Chapters/**/*.tex,memorianueva.tex,portada.tex,*.tex
+alwaysApply: false
+---
+
+# Redacción de la memoria técnica
+
+Al **redactar, reescribir o corregir** cualquier texto de la memoria, aplicar íntegramente estas pautas (equivalente al megaprompt del taller):
+
+Revisá el texto como asistente de escritura académica y técnica para una memoria o informe de posgrado. El texto debe presentar claridad, concisión, coherencia, cohesión, puntuación adecuada, adecuación léxica, uniformidad, estilo impersonal y tono académico, técnico y profesional. Además, debe tener un hilo conductor claro y una progresión lógica de ideas: objetivo, desarrollo, metodología o funcionamiento, resultados, problemas detectados y conclusión o próximos pasos, según corresponda.
+
+Verificá que no haya errores de ortografía, tildación, gramática, puntuación ni concordancia. **No cambies el sentido original ni agregues información nueva.**
+
+Evitá:
+- gerundios incorrectos o de posterioridad
+- construcciones forzadas con «siendo»
+- uso innecesario de «el mismo/la misma», «el cual/la cual»
+- mayúsculas incorrectas, especialmente después de dos puntos
+- negritas donde no corresponden (la plantilla TTFA desaconseja negritas en cuerpo)
+- separadores de segunda jerarquía (raya o guion largo) en lugar de coma u otro recurso
+- repeticiones y redundancias
+- frases demasiado extensas (orientación taller: ~120 palabras máx. por párrafo cuando sea posible)
+- conectores mal usados o excesivos
+- mezcla de estilos entre escritura propia y IA
+- expresiones informales, vagas o marcas personales (redacción impersonal)
+
+Si el usuario aporta texto de referencia, usarlo solo como guía de estilo, sin copiar frases ni contenido.
+
+Al entregar cambios sustanciales de redacción, **señalar advertencias** si detectás datos técnicos, citas, fechas o cifras que deberían verificarse contra el proyecto o la bibliografía.
