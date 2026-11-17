@@ -24,9 +24,9 @@ Un sistema embebido es un sistema computacional orientado a una función acotada
 
 En el ámbito vehicular, los sistemas embebidos abordan distintos dominios de aplicación. Uno de ellos es la telemetría vehicular, que concentra la adquisición, sincronización, almacenamiento, y transmisión de magnitudes cinemáticas y físicas. En la figura~\ref{fig:telemetria-vehicular-conceptual} se representa de forma esquemática la cadena típica en la que intervienen el vehículo, un dispositivo embebido que adquiere y registra datos, y una etapa de visualización de la información para el usuario. En competición y en flotas profesionales, este tipo de soluciones están ampliamente extendidas. En el uso particular del conductor, la demanda se orienta hacia equipos compactos, confiables, y de costo moderado \citep{garcia2026_moto_telemetry}.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.92\textwidth]{Figures/telemetria-vehicular-conceptual.png}
+	\includegraphics[width=\textwidth]{Figures/telemetria-vehicular-conceptual.png}
 	\caption{Vista conceptual de un sistema de telemetría vehicular.}
 	\label{fig:telemetria-vehicular-conceptual}
 \end{figure}
@@ -41,20 +41,21 @@ El proceso que se busca instrumentar es ese entorno de conducción. Se requiere 
 
 Las restricciones de tamaño, consumo y costo se combinan con condiciones físicas exigentes en el vehículo, como vibración, variación térmica y espacio limitado para el montaje. Esas limitaciones obligan a una arquitectura optimizada. El microcontrolador debe coordinar periféricos en paralelo, sostener tasas de muestreo adecuadas y ejecutar lógica de análisis en tiempo acotado sin depender de servicios remotos permanentes. La plataforma debe reunir adquisición multivariable, persistencia local y enlace de corto alcance hacia una aplicación móvil en el teléfono.
 
-La motivación del trabajo es cubrir esa brecha con un sistema embebido dedicado. Se prioriza la medición orientada al vehículo, el almacenamiento en tarjeta de memoria removible y el enlace inalámbrico sin conectividad celular en el dispositivo. El prototipo integra un microcontrolador STM32 (STMicroelectronics) sobre la placa de desarrollo NUCLEO-F446RE, sensado inercial, receptor de posicionamiento global, registro en tarjeta microSD y comunicación por Bluetooth de baja energía (BLE) con la aplicación móvil.
+La motivación del trabajo es cubrir esa brecha con un sistema embebido dedicado. Se prioriza la medición orientada al vehículo, el almacenamiento en tarjeta de memoria removible y el enlace inalámbrico sin conectividad celular en el dispositivo. El prototipo integra un microcontrolador STM32 (STMicroelectronics) sobre la placa de desarrollo NUCLEO-F446RE, sensado inercial, receptor de posicionamiento global, registro en tarjeta microSD y comunicación por BLE (del inglés \textit{Bluetooth Low Energy}) con la aplicación móvil.
 
 %----------------------------------------------------------------------------------------
 \section{Estado del arte}
 \label{sec:estado-arte}
 
-Durante el relevamiento sobre telemetría embebida en motocicletas se constató que el mercado profesional está dominado por plataformas cerradas, probadas en competición y en desarrollo de producto \citep{garcia2026_moto_telemetry}. Fabricantes como AiM Technologies, MoTeC y 2D Datarecording ofrecen dispositivos con unidad de medición inercial integrada, posicionamiento global, interfaces de bus de área de controlador (CAN), y software propietario de análisis \citep{aim_evo5,aim_mxl2,motec_c187,data2d_moto}. Esas soluciones alcanzan alta confiabilidad, pero suelen implicar costos elevados, formatos de datos poco abiertos y poca extensibilidad para algoritmos propios de análisis de conducción.
+Durante el relevamiento sobre telemetría embebida en motocicletas se constató que el mercado profesional está dominado por plataformas cerradas, probadas en competición y en desarrollo de producto \citep{garcia2026_moto_telemetry}. Fabricantes como AiM Technologies, MoTeC y 2D Datarecording ofrecen dispositivos con unidad de medición inercial integrada, posicionamiento global, interfaces de bus de área de controlador (CAN), y software propietario de análisis \citep{aim_evo5}\citep{aim_mxl2}\citep{motec_c187}\citep{data2d_moto}. Esas soluciones alcanzan alta confiabilidad, pero suelen implicar costos elevados, formatos de datos poco abiertos y poca extensibilidad para algoritmos propios de análisis de conducción.
 
 En la tabla~\ref{tab:comercial-telemetria} se resume un conjunto de las alternativas comerciales de nivel profesional relevadas.
 
-\begin{table}[htbp]
+\begin{table}[H]
 	\centering
 	\caption[Telemetría comercial]{Alternativas comerciales representativas de telemetría para vehículos y motocicletas.}
-	\begin{tabular}{p{2.2cm}p{2.5cm}p{4.1cm}p{4.5cm}}
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabular}{@{}p{2.0cm}@{\hspace{0.75em}}p{2.15cm}p{3.55cm}p{3.95cm}@{}}
 		\toprule
 		\textbf{Producto} & \textbf{Fabricante} & \textbf{Capacidades principales} & \textbf{Limitaciones} \\
 		\midrule
