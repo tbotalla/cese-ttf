@@ -110,12 +110,12 @@ Los módulos descritos en la sección~\ref{sec:componentes-externos} se conectan
 
 \subsection{UART}
 
-La comunicación UART envía y recibe octetos de forma asíncrona entre dos extremos. No comparte una línea de reloj global: ambos lados deben acordar de antemano la velocidad en baudios, el formato de trama y la polaridad de las señales. El esquema suele ser punto a punto, de modo que un puerto del microcontrolador atiende a un periférico.
+La comunicación UART \citep{espressif_uart} envía y recibe octetos de forma asíncrona entre dos extremos. No comparte una línea de reloj global: ambos lados deben acordar de antemano la velocidad en baudios, el formato de trama y la polaridad de las señales. El esquema suele ser punto a punto, de modo que un puerto del microcontrolador atiende a un periférico.
 
 \subsection{Bus I2C}
 
-El bus I2C organiza el intercambio en torno a un maestro y uno o más esclavos sobre un par de líneas compartidas de datos y reloj. Cada esclavo se distingue por una dirección de siete u once bits anunciada en el inicio de la transferencia. Las velocidades típicas son inferiores a las del SPI, pero el cableado resulta compacto y admite varios dispositivos en el mismo bus con pines adicionales de control cuando el hardware lo exige. El maestro accede a cada periférico mediante lectura y escritura de registros internos, un esquema habitual en sensores digitales y en módulos inerciales de baja y media tasa de muestreo.
+El bus I2C \citep{nxp_um10204} organiza el intercambio en torno a un maestro y uno o más esclavos sobre un par de líneas compartidas de datos y reloj. Cada esclavo se distingue por una dirección de siete u once bits anunciada en el inicio de la transferencia. Las velocidades típicas son inferiores a las del SPI, pero el cableado resulta compacto y admite varios dispositivos en el mismo bus con pines adicionales de control cuando el hardware lo exige. El maestro accede a cada periférico mediante lectura y escritura de registros internos, un esquema habitual en sensores digitales y en módulos inerciales de baja y media tasa de muestreo.
 
 \subsection{Bus SPI}
 
-El bus SPI opera en modo maestro-esclavo con señales dedicadas de reloj, datos de ida y vuelta y una línea de selección por cada esclavo. La sincronización la marca el reloj generado por el maestro, lo que permite alcanzar mayores velocidades de transferencia que en I2C. Un mismo bus puede alimentar varios esclavos si cada uno dispone de su señal de \textit{chip select} y solo un integrado permanece activo por intervalo de intercambio.
+El bus SPI \citep{circuitbasics_spi} opera en modo maestro-esclavo con señales dedicadas de reloj, datos de ida y vuelta y una línea de selección por cada esclavo. La sincronización la marca el reloj generado por el maestro, lo que permite alcanzar mayores velocidades de transferencia que en I2C. Un mismo bus puede alimentar varios esclavos si cada uno dispone de su señal de \textit{chip select} y solo un integrado permanece activo por intervalo de intercambio.
