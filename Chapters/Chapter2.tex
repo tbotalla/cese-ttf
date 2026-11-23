@@ -10,7 +10,9 @@ Este capítulo presenta las tecnologías de hardware y de software de terceros q
 
 La plataforma de desarrollo seleccionada fue la placa NUCLEO-F446RE \citep{st_nucleo_f446re}, que integra el microcontrolador STM32F446RET6 en encapsulado LQFP64 \citep{st_stm32f446re}. El núcleo es un procesador ARM Cortex-M4 con unidad de punto flotante y periféricos orientados a adquisición de datos, temporización y comunicación serie.
 
-Según la documentación del fabricante, el STM32F446RET6 admite frecuencias de reloj de hasta 180MHz y dispone de controladores USART (del inglés \textit{Universal Synchronous/Asynchronous Receiver Transmitter}), I2C (del inglés \textit{Inter-Integrated Circuit}), SPI (del inglés \textit{Serial Peripheral Interface}), acceso directo a memoria (DMA, del inglés \textit{Direct Memory Access}), temporizadores de propósito general y un IWDG (del inglés \textit{Independent Watchdog}). En la placa NUCLEO-F446RE se integra un depurador ST-LINK con puerto serie virtual, habitual en etapas de depuración. En la figura~\ref{fig:nucleo-f446re} se muestra la placa de desarrollo empleada.
+Según la documentación del fabricante, el STM32F446RET6 admite frecuencias de reloj de hasta 180MHz y dispone de controladores USART (del inglés \textit{Universal Synchronous/Asynchronous Receiver Transmitter}), I2C (del inglés \textit{Inter-Integrated Circuit}), SPI (del inglés \textit{Serial Peripheral Interface}), acceso directo a memoria (DMA, del inglés \textit{Direct Memory Access}), temporizadores de propósito general y un IWDG (del inglés \textit{Independent Watchdog}). En la placa NUCLEO-F446RE se integra un depurador ST-LINK con puerto serie virtual, habitual en etapas de depuración.
+
+La elección de esta familia se fundamentó en la disponibilidad de varios buses serie en los conectores de prototipado, la compatibilidad con middleware publicado por STMicroelectronics y la documentación de referencia para la línea STM32F4. El STM32F446RET6 posee 512KiB de memoria flash y 128KiB de SRAM, varias instancias USART, I2C y SPI operables en paralelo, y un margen de frecuencia de reloj adecuado para sostener adquisición multicanal sin saturar el procesador. La placa NUCLEO-F446RE expone esos periféricos mediante los conectores Arduino y Morpho y deja margen de expansión respecto del conjunto previsto para el prototipo. En la figura~\ref{fig:nucleo-f446re} se muestra la placa de desarrollo empleada.
 
 \begin{figure}[H]
 	\centering
@@ -18,8 +20,6 @@ Según la documentación del fabricante, el STM32F446RET6 admite frecuencias de 
 	\caption[Placa NUCLEO-F446RE]{Placa de desarrollo NUCLEO-F446RE \citep{st_nucleo_f446re}.}
 	\label{fig:nucleo-f446re}
 \end{figure}
-
-La elección de esta familia se fundamentó en la disponibilidad de varios buses serie en los conectores de prototipado, la compatibilidad con middleware publicado por STMicroelectronics y la documentación de referencia para la línea STM32F4. El STM32F446RET6 posee 512KiB de memoria flash y 128KiB de SRAM, varias instancias USART, I2C y SPI operables en paralelo, y un margen de frecuencia de reloj adecuado para sostener adquisición multicanal sin saturar el procesador. La placa NUCLEO-F446RE expone esos periféricos mediante los conectores Arduino y Morpho y deja margen de expansión respecto del conjunto previsto para el prototipo.
 
 \subsection{Herramientas de desarrollo y depuración}
 
