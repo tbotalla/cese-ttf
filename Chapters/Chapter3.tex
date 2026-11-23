@@ -4,7 +4,7 @@
 
 Este capítulo detalla la arquitectura del prototipo de telemetría, el diseño del hardware, la implementación de la comunicación con los periféricos y la integración con el dispositivo móvil.
 
-El capítulo se organiza en cinco ejes alineados con la estructura del proyecto. En primer lugar se describe la arquitectura del sistema y el uso de la memoria del integrado. En segundo lugar se presenta el diseño del hardware del prototipo. En tercer lugar se documenta el diseño del firmware embebido y sus módulos principales. En cuarto lugar se describen las interfaces de comunicación y el formato de los mensajes intercambiados. Por último, se explica la integración con la aplicación web en el teléfono.
+El capítulo se organiza en cinco ejes alineados con la estructura del proyecto. En primer lugar se describe la arquitectura del sistema y el uso de la memoria del integrado. En segundo lugar se presenta el diseño del hardware del prototipo. En tercer lugar se documenta el diseño del firmware embebido y sus módulos principales. En cuarto lugar se describen las interfaces de comunicación y el formato de los mensajes intercambiados. Por último se explica la integración con la aplicación web en el teléfono.
 
 %----------------------------------------------------------------------------------------
 \section{Arquitectura del sistema}
@@ -84,6 +84,8 @@ El circuito impreso integró los bloques del esquema en un único PCB orientado 
 \section{Diseño del firmware}
 \label{sec:diseno-firmware}
 
+El firmware implementó las funciones del dispositivo embebido descritas en la sección~\ref{sec:arquitectura-sistema}. Coordinó adquisición, registro local y el enlace Bluetooth mediante controladores por periférico y tareas del RTOS. La subsección siguiente detalla esa organización modular y el reparto de actividades.
+
 \subsection{Organización en módulos}
 
 La lógica embebida se repartió en controladores que encapsulan cada periférico y en tareas de FreeRTOS que orquestan el muestreo y la publicación de datos. Los módulos \texttt{gps} y \texttt{lsm6dso} abstraen la lectura de GNSS y de la IMU. El módulo \texttt{bt\_module} concentra el envío por USART3. El módulo \texttt{sd\_logger}, junto con FatFs, administra el fichero CSV en la tarjeta microSD.
@@ -103,6 +105,8 @@ Tras la inicialización del hardware y el arranque del planificador del sistema 
 %----------------------------------------------------------------------------------------
 \section{Comunicaciones e interfaces}
 \label{sec:comunicaciones-implementacion}
+
+Esta sección documenta cómo se enlazaron los buses del microcontrolador con cada módulo, qué mensajes intercambiaron el firmware y el teléfono, y qué canal quedó previsto para depuración. En primer lugar se resume la asignación de instancias USART, I2C y SPI. En segundo lugar se describe el protocolo de telemetría en \texttt{JSON} sobre el enlace Bluetooth. Por último se describe el puerto serie de depuración.
 
 \subsection{Asignación de periféricos}
 
@@ -131,11 +135,11 @@ En el STM32F446RE se configuró qué instancia de cada bus (USART, I2C y SPI) en
 
 En USART1 el canal DMA trasladó los octetos entrantes a un buffer circular. Una tarea de mayor prioridad reconstruyó las sentencias NMEA \citep{nmea_0183} a partir de ese buffer y, si una línea era válida, se conservó en memoria la posición, la hora y los demás datos de navegación que aportaba. Las líneas incompletas o incorrectas se descartaron. En I2C1 la unidad inercial se consultó en modo maestro a 100kHz con dirección de 7 bits 0x6A desde la tarea de adquisición.
 
-En USART3 el módulo HC-10 funcionó como túnel serie hacia el teléfono. El microcontrolador envió octetos por UART y el módulo los reexpuso por BLE para que el navegador móvil los recibiera. Una tarea de enlace publicó la telemetría en formato JSON. Los mensajes inerciales aportaron aceleraciones y velocidades angulares en los tres ejes, junto con la temperatura de la unidad, con magnitudes representadas como enteros escalados. Los mensajes de posicionamiento indicaron el tipo de fijación GNSS, derivado de las sentencias NMEA: sin posición, fijación en dos dimensiones, fijación en tres dimensiones con altitud o fijación con corrección diferencial. También incluyeron coordenadas geográficas, altitud, velocidad sobre el suelo, cantidad de satélites en uso y rumbo. No se definió un protocolo binario propietario sobre el UART.
+En USART3 el módulo HC-10 funcionó como túnel serie hacia el teléfono. El microcontrolador envió octetos por UART y el módulo los reexpuso por BLE para que el navegador móvil los recibiera. Una tarea de enlace publicó la telemetría en formato \texttt{JSON}. Los mensajes inerciales aportaron aceleraciones y velocidades angulares en los tres ejes, junto con la temperatura de la unidad, con magnitudes representadas como enteros escalados. Los mensajes de posicionamiento indicaron el tipo de fijación GNSS, derivado de las sentencias NMEA: sin posición, fijación en dos dimensiones, fijación en tres dimensiones con altitud o fijación con corrección diferencial. También incluyeron coordenadas geográficas, altitud, velocidad sobre el suelo, cantidad de satélites en uso y rumbo. No se definió un protocolo binario propietario sobre el UART.
 
 En SPI2 las transferencias en bloque hacia la tarjeta se realizaron con DMA bajo FatFs para reducir la carga del núcleo durante la escritura del fichero CSV. Cada registro incluyó una marca temporal en milisegundos, la hora UTC cuando el receptor GNSS dispuso de fecha y hora válidas, las tres componentes de aceleración y de velocidad angular, y la temperatura de la IMU. La primera fila del archivo declaró las columnas correspondientes y las sucesivas se alinearon al período de muestreo configurado en el firmware.
 
-En la figura~\ref{fig:cap3-formato-mensaje} se representa la organización de los mensajes JSON. En la figura~\ref{fig:cap3-secuencia-comunicacion} se ilustra la secuencia entre el ciclo de telemetría, el módulo HC-10 y el dispositivo móvil.
+En la figura~\ref{fig:cap3-formato-mensaje} se representa la organización de los mensajes \texttt{JSON}. En la figura~\ref{fig:cap3-secuencia-comunicacion} se ilustra la secuencia entre el ciclo de telemetría, el módulo HC-10 y el dispositivo móvil.
 
 \begin{figure}[H]
 	\centering
@@ -159,19 +163,23 @@ En la figura~\ref{fig:cap3-formato-mensaje} se representa la organización de lo
 
 \subsection{Canal de depuración}
 
-USART2 se asignó al puerto virtual del depurador ST-LINK. A 115200 baudios se emitieron mensajes periódicos con lecturas de sensores, estado de la tarjeta y del enlace Bluetooth. Ese canal no alimentó la aplicación del usuario, pero apoyó la verificación del prototipo durante el desarrollo. La emisión de esas trazas quedó prevista como desactivable al compilar el firmware, de modo que la versión orientada al uso productivo pudiera prescindir de ellas sin alterar la telemetría JSON por BLE ni el registro en microSD.
+USART2 enlazó al puerto virtual del depurador ST-LINK. El diseño previó un canal opcional de trazas por ese enlace, activable o desactivable al compilar el firmware, separado de la telemetría \texttt{JSON} hacia el teléfono y del registro en microSD. Los ensayos que ejercitaron ese canal y el análisis de los mensajes emitidos se documentan en el capítulo~\ref{Chapter4}.
 
 %----------------------------------------------------------------------------------------
 \section{Integración entre hardware y software}
 \label{sec:integracion-hw-sw}
 
+El prototipo se cerró con la aplicación en el teléfono y con el recorrido de los datos desde los sensores hasta la visualización. En primer lugar se resume el software del dispositivo móvil. En segundo lugar se describe el flujo extremo a extremo que une registro local, enlace inalámbrico e interfaz de usuario.
+
 \subsection{Dispositivo móvil}
 
-La interfaz del usuario se implementó como PWA con React \citep{react} y Vite \citep{vite}, accesible desde el navegador sin publicar un binario en las tiendas de aplicaciones. La capa de presentación accedió al HC-10 mediante Web Bluetooth y al perfil GATT (del inglés \textit{Generic Attribute Profile}) del CC2541. Los mapas emplearon Leaflet \citep{leaflet} para situar en un plano la posición GNSS recibida y dibujar el recorrido a medida que llegaban nuevos puntos. El análisis de la telemetría se ejecutó en el navegador del dispositivo móvil y liberó carga de procesamiento en el microcontrolador.
+La interfaz del usuario se desarrolló como una aplicación web progresiva (PWA) con React \citep{react} y Vite \citep{vite}, accesible desde el navegador sin publicar un binario en las tiendas de aplicaciones. La capa de presentación accedió al HC-10 mediante Web Bluetooth y al perfil GATT (del inglés \textit{Generic Attribute Profile}) del CC2541. Los mapas emplearon Leaflet \citep{leaflet} para situar en un plano la posición GNSS recibida y dibujar el recorrido a medida que llegaban nuevos puntos. El análisis de la telemetría se ejecutó en el navegador del dispositivo móvil y liberó carga de procesamiento en el microcontrolador.
 
 \subsection{Flujo de datos extremo a extremo}
 
-El registro local en CSV sobre microSD conservó series temporales cuando el teléfono no estaba emparejado. El intercambio inalámbrico cubrió la visualización en tiempo casi real y la consulta del estado del dispositivo según el período de telemetría definido en las tareas del firmware. En la figura~\ref{fig:cap3-integracion-e2e} se resume la adquisición, la escritura en tarjeta y el envío por Bluetooth en un diagrama de integración extremo a extremo.
+Las tareas de adquisición actualizaron en paralelo las estructuras de telemetría a partir del GNSS y de la IMU. Una tarea de registro volcó esas muestras al fichero CSV en la microSD de forma periódica, de modo que el historial persistiera aun sin teléfono emparejado. Otra tarea formateó la misma información en \texttt{JSON} y la envió por USART3 al módulo HC-10 cuando el enlace Bluetooth estuvo activo.
+
+En el teléfono, la PWA descubrió el periférico, estableció el enlace GATT con el CC2541 y consumió cada línea \texttt{JSON} recibida. La capa de mapas tradujo los reportes de posición en coordenadas sobre el plano cartográfico y actualizó el trazado del recorrido a medida que llegaron nuevos puntos. En la figura~\ref{fig:cap3-integracion-e2e} se resume esa cadena desde los sensores hasta la visualización.
 
 \begin{figure}[H]
 	\centering
