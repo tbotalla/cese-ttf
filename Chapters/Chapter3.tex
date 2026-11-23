@@ -14,7 +14,7 @@ El sistema se dividió en dos partes con acoplamiento flexible. El dispositivo e
 
 \subsection{Interconexión de módulos}
 
-En la placa NUCLEO-F446RE se centralizó la lectura de sensores, el acceso a la tarjeta microSD y el uso de tres instancias USART. El receptor NEO-M8N entregó tramas NMEA por USART1. La unidad inercial LSM6DSO respondió por I2C1. El módulo HC-10 reenvió octetos entre el integrado y el controlador Bluetooth del teléfono. En la figura~\ref{fig:interconexion-buses-cap3} se resume la asignación lógica entre los bloques de hardware.
+En el dispositivo embebido del prototipo el procesamiento se concentró en el microcontrolador STM32F446RE de la placa NUCLEO-F446RE \citep{st_nucleo_f446re}. A ese integrado se cablearon el receptor GNSS NEO-M8N, la unidad inercial LSM6DSO, el módulo de enlace Bluetooth HC-10 y el slot de tarjeta microSD, de modo que coincidieran las funciones descritas en la arquitectura general del sistema. En la figura~\ref{fig:interconexion-buses-cap3} se resume la interconexión lógica entre esos bloques. El NEO-M8N entregó tramas NMEA por USART1. La LSM6DSO respondió por I2C1. El HC-10 reenvió octetos hacia el controlador Bluetooth del teléfono por USART3. La microSD operó por SPI2 bajo el sistema de archivos del firmware.
 
 \begin{figure}[H]
 	\centering
