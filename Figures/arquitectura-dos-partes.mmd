@@ -1,0 +1,27 @@
+---
+config:
+  themeVariables:
+    edgeLabelBackground: transparent
+  layout: fixed
+---
+flowchart LR
+ subgraph Emb["<b>Dispositivo embebido</b>"]
+    direction TB
+        SENS["GNSS NEO-M8N<br>"]
+        FW["STM32F446RE<br>(firmware)"]
+        SD["Tarjeta microSD<br>"]
+        HC["Módulo HC-10<br>"]
+  end
+ subgraph Mov["<b>Dispositivo móvil</b>"]
+    direction TB
+        PWA["PWA en el navegador<br>"]
+        WB["Web Bluetooth<br>"]
+        UI["Visualización<br>telemetría"]
+  end
+    FW --> SD & HC
+    PWA --> WB & UI
+    HC --> WB
+    SENS --> FW
+    n1["IMU LSM6DSO"] --> FW
+
+    n1@{ shape: rect}

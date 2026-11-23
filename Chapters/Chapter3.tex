@@ -10,7 +10,14 @@ El capítulo se organiza en cinco ejes alineados con la estructura del proyecto.
 \section{Arquitectura del sistema}
 \label{sec:arquitectura-sistema}
 
-El sistema se dividió en dos partes con acoplamiento flexible. El dispositivo embebido en la motocicleta adquirió datos inerciales y de posicionamiento, registró series temporales en almacenamiento local y expuso un enlace serie hacia un módulo BLE. El teléfono móvil concentró la interfaz de usuario, la visualización cartográfica y la recepción de telemetría cuando existió emparejamiento inalámbrico. Esa separación preservó el registro autónomo aun si el conductor no abrió la aplicación web.
+El sistema se dividió en dos partes con acoplamiento flexible. El dispositivo embebido en la motocicleta adquirió datos inerciales y de posicionamiento, registró series temporales en almacenamiento local y expuso un enlace serie hacia un módulo BLE. El teléfono móvil concentró la interfaz de usuario, la visualización cartográfica y la recepción de telemetría cuando existió emparejamiento inalámbrico. Esa separación preservó el registro autónomo aun si el conductor no abrió la aplicación web. En la figura~\ref{fig:arquitectura-dos-partes-cap3} se resume la organización de ambas partes antes del detalle de hardware y de software.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.95\textwidth]{Figures/arquitectura-dos-partes.png}
+	\caption[Arquitectura en dos partes]{Arquitectura general del sistema: dispositivo embebido y dispositivo móvil.}
+	\label{fig:arquitectura-dos-partes-cap3}
+\end{figure}
 
 \subsection{Interconexión de módulos}
 
