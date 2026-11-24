@@ -27,6 +27,7 @@ Evitá:
 - expresiones informales, vagas o marcas personales (redacción impersonal)
 - citas bibliográficas agrupadas en una sola llamada (`\citep{a,b}` y equivalentes `[x,y]` en el PDF). Usar un `\citep{clave}` por fuente (p. ej. `\citep{a}\citep{b}`)
 - el carácter raya larga (em dash, U+2014) y la raya en (en dash, U+2013) en texto o reglas. Usar guion ASCII `-` (p. ej. `15-20`)
+- referencias a figuras entre paréntesis (p. ej. `(figura~\ref{...})`). Integrar la cita en la oración: `La figura~\ref{...} muestra...`, `Como en la figura~\ref{...}, ...`, `según la figura~\ref{...}`; evitar `En la figura~\ref{...} se ...` cuando suene rígido
 
 **Unidades de medida (español):** escribir la unidad pegada al número (p. ej. `180MHz`, `3.3V`, `100kHz`, `512KiB`). No usar espacio irrompible de LaTeX (`~`) entre cifra y unidad.
 

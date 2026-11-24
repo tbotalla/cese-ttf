@@ -1,0 +1,55 @@
+%% Figura 3.6 - Patrón conceptual por periférico (ejemplo IMU)
+%% Regenerar:
+%%   npx @mermaid-js/mermaid-cli -i cap3-flujo-firmware.mmd -o cap3-flujo-firmware.png -b white -C cap3-flujo-firmware.css -q
+%%   magick cap3-flujo-firmware.png -fuzz 2%% -trim +repage -bordercolor white -border 18 cap3-flujo-firmware.png
+%%{init: {
+  "flowchart": {
+    "defaultRenderer": "elk",
+    "htmlLabels": true,
+    "rankSpacing": 40,
+    "nodeSpacing": 24,
+    "padding": 14,
+    "useMaxWidth": false,
+    "wrappingWidth": 300
+  },
+  "elk": {
+    "elk.direction": "DOWN",
+    "elk.padding": "[top=14,left=16,bottom=16,right=16]",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "40",
+    "elk.alignment": "CENTER"
+  },
+  "themeVariables": {
+    "fontSize": "16px",
+    "lineColor": "#37474f",
+    "primaryTextColor": "#212121",
+    "primaryColor": "#fafafa",
+    "primaryBorderColor": "#546e7a",
+    "clusterBkg": "#eceff1",
+    "clusterBorder": "#546e7a"
+  }
+}}%%
+flowchart TB
+  subgraph COL[" "]
+    direction TB
+    HW["<div class='fw'>Periférico LSM6DSO</div>"]
+    HAL["<div class='fw'>Capa HAL, I2C1</div>"]
+    DRV["<div class='fw'>Controlador lsm6dso</div>"]
+
+    subgraph RTOS["FreeRTOS"]
+      direction TB
+      AO["<div class='fw'>Objeto activo<br/>tarea de adquisición IMU</div>"]
+      Q["<div class='fw'>Cola de mensajes</div>"]
+      AO --> Q
+    end
+
+    TE["<div class='fw'>Estructuras de telemetría</div>"]
+    OUT["<div class='fw'>Otros objetos activos<br/>registro CSV, JSON</div>"]
+
+    HW --> HAL --> DRV --> AO
+    Q --> TE --> OUT
+  end
+
+  classDef n fill:#fafafa,stroke:#546e7a,stroke-width:1.5px,color:#212121
+  classDef shell fill:none,stroke:none,color:#212121
+  class HW,HAL,DRV,AO,Q,TE,OUT n
+  class COL shell
